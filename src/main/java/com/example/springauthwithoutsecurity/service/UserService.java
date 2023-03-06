@@ -10,6 +10,7 @@ import com.example.springauthwithoutsecurity.user.dto.UserRegisterDto;
 import com.example.springauthwithoutsecurity.user.dto.UserResponseDto;
 import com.example.springauthwithoutsecurity.user.dto.UserVerifyResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,10 +66,13 @@ public class UserService {
 
     @Transactional
     public Jwt refreshToken(String refreshToken){
-        Users user = userRepository.findByRefreshToken(refreshToken);
-        if(user == null)
-            return null;
         try{
+            // 유효한 토큰 인지 검증
+            jwtProvider.getClaims(refreshToken);
+            Users user = userRepository.findByRefreshToken(refreshToken);
+            if(user == null)
+                return null;
+
             HashMap<String, Object> claims = new HashMap<>();
             AuthenticateUser authenticateUser = new AuthenticateUser(user.getUserEmail(),
                     user.getUserRoles().stream().map(UserRole::getRole).collect(Collectors.toSet()));
