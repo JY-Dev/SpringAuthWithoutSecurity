@@ -508,10 +508,12 @@ private final ObjectMapper objectMapper;
 
 @Transactional
     public Jwt refreshToken(String refreshToken){
-        Users user = userRepository.findByRefreshToken(refreshToken);
-        if(user == null)
-            return null;
+        
         try{
+            jwtProvider.getClaims(refreshToken);
+            Users user = userRepository.findByRefreshToken(refreshToken);
+            if(user == null)
+                return null;
             HashMap<String, Object> claims = new HashMap<>();
             AuthenticateUser authenticateUser = new AuthenticateUser(user.getUserEmail(),
                     user.getUserRoles().stream().map(UserRole::getRole).collect(Collectors.toSet()));
@@ -526,7 +528,7 @@ private final ObjectMapper objectMapper;
     }
 ```
 
-갱신하는 로직을 보자면 먼저 refreshToken으로 user을 조회합니다. 만약 유저가 존재하지 않는다면 Null을 반환해주고 AuthenticateUser를 생성해줍니다. 그리고 Json 형태로 만들어주고 Calims에 넣어줍니다. 그다음  jwt 토큰을 생성해주고 refreshToken을 user 테이블에 저장해줍니다. 정상적으로 저장이 되었다면 jwt를 return 해줍니다. 다음으로 AuthController를 생성해서 tokenRefresh 요청을 받아 토큰갱신을 처리하도록 하겠습니다. 
+갱신하는 로직을 보자면 먼저 refreshToken이 유요한지 확인하고 refreshToken으로 user을 조회합니다. 만약 유저가 존재하지 않는다면 Null을 반환해주고 AuthenticateUser를 생성해줍니다. 그리고 Json 형태로 만들어주고 Calims에 넣어줍니다. 그다음  jwt 토큰을 생성해주고 refreshToken을 user 테이블에 저장해줍니다. 정상적으로 저장이 되었다면 jwt를 return 해줍니다. 다음으로 AuthController를 생성해서 tokenRefresh 요청을 받아 토큰갱신을 처리하도록 하겠습니다. 
 
 ```java
 @Getter
